@@ -1,0 +1,27 @@
+####################                    
+# Use both requirements and rank
+####################                                                    
+
+executable     = init.sh
+universe       = vanilla
+
+#Request_memory = 32
+
+
+# uncomment below two lines for interactive
++IsMatlabBuildJob = true
+requirements   = OpSys == "LINUX" && Arch == "x86_64" && (OpSysAndVer =?= "SL6") && IsMatlabBuildSlot
+
+# comment out below line for interactive
+#requirements   = OpSys == "LINUX" && Arch == "x86_64" && (OpSysAndVer =?= "SL6")
+
+error   = err-$(Process).txt
+output  = out-$(Process).txt
+log     = log-$(Process).txt
+#Input   = in.$(Process) 
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files = cyc-cde.tar.gz, cloudlus, cycdriver, scenario.json
+
+queue 1
