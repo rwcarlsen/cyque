@@ -1,5 +1,5 @@
 
-cyc-cde.tar.gz: sample-sim.xml
+cyc-cde.tar.gz: sample-sim.xml cyclus
 	cde cyclus $<
 	rm cyclus.sqlite
 	mv cde-package cyc-cde
