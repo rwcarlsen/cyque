@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+./cyc-cde/cde-exec /home/r/cyc/install/bin/cyclus
+
