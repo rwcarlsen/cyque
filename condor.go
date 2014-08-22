@@ -21,6 +21,7 @@ var (
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile)
 	flag.Usage = func() {
 		fmt.Println("Usage: condor [FILE...]")
 		fmt.Println("Copy listed files to condor submit node and possibly submit a job.\n")
@@ -45,7 +46,8 @@ func main() {
 		fnames = append(fnames, *submit)
 	}
 
-	for _, fname := range flag.Args() {
+	for _, fname := range fnames {
+		fmt.Printf("copying %v\n", fname)
 		f, err := os.Open(fname)
 		if err != nil {
 			log.Fatal(err)

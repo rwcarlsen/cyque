@@ -1,5 +1,4 @@
 
-
 cyc-cde.tar.gz: sample-sim.xml
 	cde cyclus $<
 	rm cyclus.sqlite

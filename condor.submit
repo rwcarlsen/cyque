@@ -3,11 +3,11 @@ executable     = init.sh
 universe       = vanilla
 
 # uncomment below two lines for interactive
-+IsMatlabBuildJob = true
-requirements   = OpSys == "LINUX" && Arch == "x86_64" && (OpSysAndVer =?= "SL6") && IsMatlabBuildSlot
+#+IsMatlabBuildJob = true
+#requirements   = OpSys == "LINUX" && Arch == "x86_64" && (OpSysAndVer =?= "SL6") && IsMatlabBuildSlot
 
 # comment out below line for interactive
-#requirements   = OpSys == "LINUX" && Arch == "x86_64" && (OpSysAndVer =?= "SL6")
+requirements   = OpSys == "LINUX" && Arch == "x86_64" && (OpSysAndVer =?= "SL6")
 
 error   = err-$(Process).txt
 output  = out-$(Process).txt
