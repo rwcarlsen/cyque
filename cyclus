@@ -1,3 +1,5 @@
-#!/usr/bin/bash
-./cyc-cde/cde-exec /home/r/cyc/install/bin/cyclus
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+$DIR/cyc-cde/cde-exec /home/r/cyc/install/bin/cyclus $@
 
