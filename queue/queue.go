@@ -1,8 +1,9 @@
 package queue
 
 /*
+
 #cgo CFLAGS: -I "/home/robert/git/cyque/queue/work_queue"
-#cgo LDFLAGS: work_queue/libwq.a
+#cgo LDFLAGS: "libwork_queue.a"
 
 #include "work_queue.h"
 
