@@ -1,15 +1,22 @@
 package queue
 
 /*
-
-#cgo CFLAGS: -I "/home/robert/git/cyque/queue/work_queue"
-#cgo LDFLAGS: "libwork_queue.a"
-
-#include "work_queue.h"
+#cgo CFLAGS: -I /home/r/gopath/src/github.com/rwcarlsen/cyque/queue/cctools-4.2.2-source/work_queue/src
+#cgo CFLAGS: -I /home/r/gopath/src/github.com/rwcarlsen/cyque/queue/cctools-4.2.2-source/dttools/src
+#cgo CFLAGS: -I /home/r/gopath/src/github.com/rwcarlsen/cyque/queue/cctools-4.2.2-source/chirp/src
+#cgo LDFLAGS: /home/r/gopath/src/github.com/rwcarlsen/cyque/queue//cctools-4.2.2-source/work_queue/src/libwork_queue.a
+#cgo LDFLAGS: /home/r/gopath/src/github.com/rwcarlsen/cyque/queue//cctools-4.2.2-source/dttools/src/libdttools.a
+#cgo LDFLAGS: /home/r/gopath/src/github.com/rwcarlsen/cyque/queue//cctools-4.2.2-source/chirp/src/libchirp.a
+#cgo LDFLAGS: -lm
 
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+
+#include "/home/r/gopath/src/github.com/rwcarlsen/cyque/queue/cctools-4.2.2-source/work_queue/src/work_queue.h"
+
+typedef struct work_queue work_queue;
+typedef struct work_queue_task work_queue_task;
 */
 import "C"
 import (
@@ -20,22 +27,22 @@ import (
 
 type Queue struct {
 	q     *C.work_queue
-	tasks map[uintptr]*Task
+	tasks map[*C.work_queue_task]*Task
 }
 
 func NewQueue(port int) (*Queue, error) {
-	q := C.work_queue_create(C.int(port))
+	q, err := C.work_queue_create(C.int(port))
 	if q == nil {
-		return nil, fmt.Errorf("couldn't listen on port %v: %v", port, C.GoString(C.strerror(errno)))
+		return nil, err
 	}
 
-	queue := &Queue{q}
+	queue := &Queue{q, make(map[*C.work_queue_task]*Task)}
 	runtime.SetFinalizer(queue, freequeue)
 	return queue, nil
 }
 
 func (q *Queue) Submit(t *Task) (taskid int) {
-	q.tasks[uintptr(t.t)] = t
+	q.tasks[t.t] = t
 	return int(C.work_queue_submit(q.q, t.t))
 }
 
@@ -51,8 +58,8 @@ func (q *Queue) Wait(secs int) *Task {
 		return nil
 	}
 
-	task := q.tasks[uintptr(t)]
-	delete(q.tasks, uintptr(t))
+	task := q.tasks[t]
+	delete(q.tasks, t)
 	return task
 }
 
@@ -74,7 +81,7 @@ func NewTask(cmd string) (*Task, error) {
 
 	task := &Task{t}
 	runtime.SetFinalizer(task, freetask)
-	return task
+	return task, nil
 }
 
 func freetask(t *Task) { C.work_queue_task_delete(t.t) }
@@ -103,9 +110,9 @@ func (t *Task) addfile(local, remote string, cache bool, outfile bool) error {
 		wantcache = C.WORK_QUEUE_CACHE
 	}
 
-	status := C.work_queue_task_specify_file(t.t, clocal, cremote, ftype, wantcache)
+	status, err := C.work_queue_task_specify_file(t.t, clocal, cremote, C.int(ftype), C.int(wantcache))
 	if int(status) == 0 {
-		return fmt.Errorf("failed to add file %v to task: %v", local, C.GoString(strerror(errno)))
+		return err
 	}
 	return nil
 }
