@@ -1,0 +1,98 @@
+#!/bin/sh
+
+SUBMIT_COMMON=`which wq_submit_workers.common`
+if [ -z "$SUBMIT_COMMON" ];
+then
+	echo "Please add 'wq_submit_workers.common' to your PATH."
+else
+	. $SUBMIT_COMMON
+fi
+
+
+show_help() 
+{
+	echo "  -r <requirements>        Condor requirements ClassAd."
+	echo "  --autosize               Condor will automatically size the worker to the slot."
+}
+
+# This dummy requirement inhibits Condor from adding its own Memory expression,
+# which causes long-running workers to eventually sit idle in the queue.
+# The user can still add their own expression via the -r option.
+
+requirements=""
+transfer_input_files="work_queue_worker, cctools_gpu_autodetect"
+
+parse_arguments()
+{
+	while [ $# -gt 0 ]
+	do
+		case $1 in
+			-r)  
+			shift
+			requirements="$requirements $1"
+			;;
+
+			--autosize)
+			arguments="$arguments --cores \$\$(TotalSlotCpus) --memory \$\$(TotalSlotMemory) --disk \$\$(TotalSlotDisk)"
+			cores="TotalSlotCpus"
+			memory="TotalSlotMemory"
+			disk="TotalSlotDisk"
+			;;
+
+			*)
+			break
+			;;
+			
+		esac
+		shift
+	done
+
+	submit_dir=/tmp/${USER}-workers
+
+}
+
+set_up_password_file()
+{
+	transfer_input_files="${transfer_input_files}, $pwfile"
+}
+
+submit_workers_command()
+{
+	cat > condor_submit_file.$$ <<EOF
+universe = vanilla
+executable = work_queue_worker
+arguments = $arguments $host $port
+transfer_input_files = ${transfer_input_files}
+should_transfer_files = yes
+when_to_transfer_output = on_exit
+output = worker.\$(PROCESS).output
+error = worker.\$(PROCESS).error
+log = workers.log
+requirements = $requirements
+
+# Some programs assume some variables are set, like HOME, so we export the
+# environment variables with the job.  Comment the next line if you do not want
+# the environment exported.
+getenv = true
+EOF
+
+	if [ ! -z "$cores" ]; then
+		echo "request_cpus = ${cores}" >> condor_submit_file.$$
+	fi
+
+	if [ ! -z "$memory" ]; then
+		echo "request_memory = ${memory}" >> condor_submit_file.$$
+	fi
+
+	if [ ! -z "$disk" ]; then
+		echo "request_disk = ${disk}" >> condor_submit_file.$$
+	fi
+
+	echo "queue $count" >> condor_submit_file.$$
+
+	condor_submit condor_submit_file.$$
+	rm condor_submit_file.$$
+}
+
+submit_workers "$@"
+

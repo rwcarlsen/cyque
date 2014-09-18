@@ -1,19 +1,19 @@
 package queue
 
 /*
-#cgo CFLAGS: -I /home/r/gopath/src/github.com/rwcarlsen/cyque/queue/cctools-4.2.2-source/work_queue/src
-#cgo CFLAGS: -I /home/r/gopath/src/github.com/rwcarlsen/cyque/queue/cctools-4.2.2-source/dttools/src
-#cgo CFLAGS: -I /home/r/gopath/src/github.com/rwcarlsen/cyque/queue/cctools-4.2.2-source/chirp/src
-#cgo LDFLAGS: /home/r/gopath/src/github.com/rwcarlsen/cyque/queue//cctools-4.2.2-source/work_queue/src/libwork_queue.a
-#cgo LDFLAGS: /home/r/gopath/src/github.com/rwcarlsen/cyque/queue//cctools-4.2.2-source/dttools/src/libdttools.a
-#cgo LDFLAGS: /home/r/gopath/src/github.com/rwcarlsen/cyque/queue//cctools-4.2.2-source/chirp/src/libchirp.a
+#cgo CFLAGS: -I cctools/work_queue/src
+#cgo CFLAGS: -I cctools/dttools/src
+#cgo CFLAGS: -I cctools/chirp/src
+#cgo LDFLAGS: cctools/work_queue/src/libwork_queue.a
+#cgo LDFLAGS: cctools/dttools/src/libdttools.a
+#cgo LDFLAGS: cctools/chirp/src/libchirp.a
 #cgo LDFLAGS: -lm
 
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 
-#include "/home/r/gopath/src/github.com/rwcarlsen/cyque/queue/cctools-4.2.2-source/work_queue/src/work_queue.h"
+#include "work_queue.h"
 
 typedef struct work_queue work_queue;
 typedef struct work_queue_task work_queue_task;

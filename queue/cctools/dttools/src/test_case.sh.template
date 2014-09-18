@@ -1,0 +1,21 @@
+#!/bin/sh
+
+. ../../dttools/src/test_runner.common.sh
+
+prepare()
+{
+	return 0
+}
+
+run()
+{
+	../src/someprog
+	return $?
+}
+
+clean()
+{
+	return 0
+}
+
+dispatch "$@"
