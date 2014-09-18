@@ -1,12 +1,12 @@
 package queue
 
 /*
-#cgo CFLAGS: -I cctools/work_queue/src
-#cgo CFLAGS: -I cctools/dttools/src
-#cgo CFLAGS: -I cctools/chirp/src
-#cgo LDFLAGS: cctools/work_queue/src/libwork_queue.a
-#cgo LDFLAGS: cctools/dttools/src/libdttools.a
-#cgo LDFLAGS: cctools/chirp/src/libchirp.a
+#cgo CFLAGS: -I $SRCDIR/cctools/work_queue/src
+#cgo CFLAGS: -I $SRCDIR/cctools/dttools/src
+#cgo CFLAGS: -I $SRCDIR/cctools/chirp/src
+#cgo LDFLAGS: $SRCDIR/cctools/work_queue/src/libwork_queue.a
+#cgo LDFLAGS: $SRCDIR/cctools/dttools/src/libdttools.a
+#cgo LDFLAGS: $SRCDIR/cctools/chirp/src/libchirp.a
 #cgo LDFLAGS: -lm
 
 #include <stdlib.h>
@@ -47,6 +47,10 @@ func (q *Queue) Submit(t *Task) (taskid int) {
 	id := int(C.work_queue_submit(q.q, t.t))
 	q.tasks[id] = t
 	return id
+}
+
+func (q *Queue) KillWorkers() (n int) {
+	return int(C.work_queue_shut_down_workers(q.q, 0))
 }
 
 func (q *Queue) Empty() bool { return C.work_queue_empty(q.q) == 0 }
