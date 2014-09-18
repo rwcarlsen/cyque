@@ -14,6 +14,7 @@ package queue
 #include <string.h>
 
 #include "work_queue.h"
+#include "list.h"
 
 typedef struct work_queue work_queue;
 typedef struct work_queue_task work_queue_task;
@@ -22,12 +23,13 @@ import "C"
 import (
 	"fmt"
 	"runtime"
+	"time"
 	"unsafe"
 )
 
 type Queue struct {
 	q     *C.work_queue
-	tasks map[*C.work_queue_task]*Task
+	tasks map[int]*Task
 }
 
 func NewQueue(port int) (*Queue, error) {
@@ -36,37 +38,76 @@ func NewQueue(port int) (*Queue, error) {
 		return nil, err
 	}
 
-	queue := &Queue{q, make(map[*C.work_queue_task]*Task)}
+	queue := &Queue{q, make(map[int]*Task)}
 	runtime.SetFinalizer(queue, freequeue)
 	return queue, nil
 }
 
 func (q *Queue) Submit(t *Task) (taskid int) {
-	q.tasks[t.t] = t
-	return int(C.work_queue_submit(q.q, t.t))
+	id := int(C.work_queue_submit(q.q, t.t))
+	q.tasks[id] = t
+	return id
 }
 
 func (q *Queue) Empty() bool { return C.work_queue_empty(q.q) == 0 }
 
-func (q *Queue) Wait(secs int) *Task {
-	if secs < 0 {
-		secs = int(C.WORK_QUEUE_WAITFORTASK)
-	}
+func (q *Queue) CancelAllTasks() {
+	list := C.work_queue_cancel_all_tasks(q.q)
+	C.list_delete(list)
+	q.tasks = map[int]*Task{}
+}
 
-	t := C.work_queue_wait(q.q, C.int(secs))
+func (q *Queue) CancelTask(id int) {
+	C.work_queue_cancel_by_taskid(q.q, C.int(id))
+	delete(q.tasks, id)
+}
+
+func (q *Queue) Wait() *Task {
+	t := C.work_queue_wait(q.q, C.WORK_QUEUE_WAITFORTASK)
 	if t == nil {
 		return nil
 	}
 
-	task := q.tasks[t]
-	delete(q.tasks, t)
+	task := q.tasks[int(t.taskid)]
+	delete(q.tasks, int(t.taskid))
+	task.update()
 	return task
 }
 
 func freequeue(q *Queue) { C.work_queue_delete(q.q) }
 
 type Task struct {
-	t *C.work_queue_task
+	Id            int
+	Command       string
+	Stdout        string
+	ReturnStatus  int
+	Result        int
+	Host          string
+	Hostname      string
+	Finished      time.Time
+	Committed     time.Time
+	Submitted     time.Time
+	NSubmissions  int
+	TotalExecTime time.Duration
+	t             *C.work_queue_task
+}
+
+func (t *Task) update() {
+	t.Command = C.GoString(t.t.command_line)
+	t.Stdout = C.GoString(t.t.output)
+	t.ReturnStatus = int(t.t.return_status)
+	t.Result = int(t.t.result)
+	t.Host = C.GoString(t.t.host)
+	t.Hostname = C.GoString(t.t.hostname)
+	t.Finished = convTime(t.t.time_task_finish)
+	t.Submitted = convTime(t.t.time_task_submit)
+	t.Committed = convTime(t.t.time_committed)
+	t.NSubmissions = int(t.t.total_submissions)
+	t.TotalExecTime = time.Duration(int(t.t.total_cmd_execution_time) * 1000)
+}
+
+func convTime(tm C.timestamp_t) time.Time {
+	return time.Unix(int64(tm)/1000000, (int64(tm)%1000000)*1000)
 }
 
 func NewTask(cmd string) (*Task, error) {
@@ -79,7 +120,7 @@ func NewTask(cmd string) (*Task, error) {
 		return nil, fmt.Errorf("failed to create task")
 	}
 
-	task := &Task{t}
+	task := &Task{t: t}
 	runtime.SetFinalizer(task, freetask)
 	return task, nil
 }
