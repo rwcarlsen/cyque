@@ -1,6 +1,0 @@
-export ECHOB=echob
-export ECHOC=$ECHOA
-
-out.all: $ECHOA $ECHOC
-	$ECHOA $ECHOA $ECHOB > out.all; $ECHOC $ECHOC $ECHOB >> out.all	
-

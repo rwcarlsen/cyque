@@ -1,3 +1,0 @@
-: c.sh a.py
-	echo ""
-
